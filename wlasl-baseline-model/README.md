@@ -1,4 +1,4 @@
-# Detection of American Sign Language (ASL) Gloass from Videos
+# Detection of American Sign Language (ASL) Gloss from Videos
 
 ## Introduction
 
