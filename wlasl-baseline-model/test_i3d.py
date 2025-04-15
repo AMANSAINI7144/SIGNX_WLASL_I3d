@@ -21,8 +21,8 @@ from datasets.nslt_dataset import NSLT as Dataset
 import cv2
 
 
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
 def load_rgb_frames_from_video(video_path, start=0, num=-1):
@@ -83,7 +83,7 @@ def run(mode='rgb',
         
     i3d.replace_logits(num_classes)
     i3d.load_state_dict(torch.load(weights))  # nslt_2000_000700.pt nslt_1000_010800 nslt_300_005100.pt(best_results)  nslt_300_005500.pt(results_reported) nslt_2000_011400
-    # i3d.cuda()
+    i3d.cuda()
     i3d = nn.DataParallel(i3d)
     i3d.eval()
 
@@ -92,14 +92,14 @@ def run(mode='rgb',
     correct_10 = 0
 
     ## Bug fix - must be float since integer division will create integer values
-    top1_fp = np.zeros(num_classes, dtype=np.float)
-    top1_tp = np.zeros(num_classes, dtype=np.float)
+    top1_fp = np.zeros(num_classes, dtype=float)
+    top1_tp = np.zeros(num_classes, dtype=float)
 
-    top5_fp = np.zeros(num_classes, dtype=np.float)
-    top5_tp = np.zeros(num_classes, dtype=np.float)
+    top5_fp = np.zeros(num_classes, dtype=float)
+    top5_tp = np.zeros(num_classes, dtype=float)
 
-    top10_fp = np.zeros(num_classes, dtype=np.float)
-    top10_tp = np.zeros(num_classes, dtype=np.float)
+    top10_fp = np.zeros(num_classes, dtype=float)
+    top10_tp = np.zeros(num_classes, dtype=float)
 
     for c, data in enumerate(dataloaders["test"], 1):
         inputs, labels, video_id = data  # inputs: b, c, t, h, w
@@ -178,23 +178,23 @@ def ensemble(mode, root, train_split, weights, num_classes):
         i3d.load_state_dict(torch.load('weights/rgb_imagenet.pt'))
     i3d.replace_logits(num_classes)
     i3d.load_state_dict(torch.load(weights))  # nslt_2000_000700.pt nslt_1000_010800 nslt_300_005100.pt(best_results)  nslt_300_005500.pt(results_reported) nslt_2000_011400
-    # i3d.cuda()
+    i3d.cuda()
     i3d = nn.DataParallel(i3d)
     i3d.eval()
 
     correct = 0
     correct_5 = 0
     correct_10 = 0
-    # confusion_matrix = np.zeros((num_classes,num_classes), dtype=np.int)
+    # confusion_matrix = np.zeros((num_classes,num_classes), dtype=int)
 
-    top1_fp = np.zeros(num_classes, dtype=np.int)
-    top1_tp = np.zeros(num_classes, dtype=np.int)
+    top1_fp = np.zeros(num_classes, dtype=int)
+    top1_tp = np.zeros(num_classes, dtype=int)
 
-    top5_fp = np.zeros(num_classes, dtype=np.int)
-    top5_tp = np.zeros(num_classes, dtype=np.int)
+    top5_fp = np.zeros(num_classes, dtype=int)
+    top5_tp = np.zeros(num_classes, dtype=int)
 
-    top10_fp = np.zeros(num_classes, dtype=np.int)
-    top10_tp = np.zeros(num_classes, dtype=np.int)
+    top10_fp = np.zeros(num_classes, dtype=int)
+    top10_tp = np.zeros(num_classes, dtype=int)
 
     for data in dataloaders["test"]:
         inputs, labels, video_id = data  # inputs: b, c, t, h, w
@@ -252,12 +252,12 @@ def run_on_tensor(weights, ip_tensor, num_classes):
 
     i3d.replace_logits(num_classes)
     i3d.load_state_dict(torch.load(weights))  # nslt_2000_000700.pt nslt_1000_010800 nslt_300_005100.pt(best_results)  nslt_300_005500.pt(results_reported) nslt_2000_011400
-    # i3d.cuda()
+    i3d.cuda()
     i3d = nn.DataParallel(i3d)
     i3d.eval()
 
     t = ip_tensor.shape[2]
-    # ip_tensor.cuda()
+    ip_tensor.cuda()
     per_frame_logits = i3d(ip_tensor)
 
     predictions = F.upsample(per_frame_logits, t, mode='linear')
@@ -298,6 +298,6 @@ if __name__ == '__main__':
     root = {'word':'videos'}
 
     train_split = 'preprocess/nslt_2000.json'
-    weights = '/home/jovyan/work/WLASL_complete/checkpoints/nslt_2000_065846_0.447803.pt'
+    weights = 'checkpoints/nslt_2000_065846_0.447803.pt'
 
-    run(mode=mode, root=root, train_split=train_split, weights=weights, datasets =datasets)
+    run(mode=mode, root=root, train_split=train_split, weights=weights, datasets=datasets)
